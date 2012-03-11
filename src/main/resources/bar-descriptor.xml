@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<qnx xmlns="http://www.qnx.com/schemas/application/1.0">
+    <id>com.example.demo</id>
+    <versionNumber>$versionNumber</versionNumber>
+    <buildId>$buildId</buildId>
+    <name>demo</name>
+    <author>Example Inc.</author>
+    <action system="true">run_native</action>
+    <asset path="${QNX_TARGET}/../target-override/${CPUVARDIR}/usr/lib/libbps.so" type="Qnx/Elf">lib/libbps.so.1</asset>
+    <configuration id="com.qnx.qcc.configuration.exe.release.1647464795" name="Device-Release">
+       <platformArchitecture>armle-v7</platformArchitecture>
+       <asset path="Device-Release/demo" entry="true" type="Qnx/Elf">demo</asset>
+    </configuration>
+    <env var="LD_LIBRARY_PATH" value="app/native/lib"/>
+</qnx>
