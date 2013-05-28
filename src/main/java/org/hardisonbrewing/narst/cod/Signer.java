@@ -16,6 +16,7 @@ import java.security.PrivateKey;
 import java.security.spec.DSAPrivateKeySpec;
 import java.util.Properties;
 
+import org.apache.commons.codec.binary.Hex;
 import org.codehaus.plexus.util.IOUtil;
 
 public class Signer implements org.hardisonbrewing.narst.Signer {
@@ -52,9 +53,6 @@ public class Signer implements org.hardisonbrewing.narst.Signer {
         if ( input == null ) {
             throw new IllegalStateException( "Input is null" );
         }
-        //        if ( salt == null ) {
-        //            throw new IllegalStateException( "Salt is null" );
-        //        }
         if ( privateKey == null ) {
             throw new IllegalStateException( "PrivateKey is null" );
         }
@@ -83,7 +81,11 @@ public class Signer implements org.hardisonbrewing.narst.Signer {
             sender.disconnect();
         }
 
-        return getSignature() != null;
+        byte[] signature = getSignature();
+        if ( signature != null ) {
+            System.out.println( Hex.encodeHex( signature ) );
+        }
+        return signature != null;
     }
 
     public byte[] getSignature() {
@@ -94,11 +96,11 @@ public class Signer implements org.hardisonbrewing.narst.Signer {
 
         String s1 = response.getProperty( "Version" );
         if ( s1 == null ) {
-            System.out.println( "Version of server incompatible." );
+            throw new IllegalStateException( "Version of server incompatible." );
         }
         String s2 = response.getProperty( "Response" );
         if ( s2 == null || !s2.equals( "Signature Response" ) ) {
-            System.out.println( "Response command invalid." );
+            throw new IllegalStateException( "Response command invalid." );
         }
         String s3 = response.getProperty( "Confirm" );
         if ( s3 == null ) {
@@ -106,24 +108,23 @@ public class Signer implements org.hardisonbrewing.narst.Signer {
             if ( s4 == null ) {
                 s4 = response.getProperty( "Unknown" );
                 if ( s4 == null ) {
-                    System.out.println( "No confirm or error string in response." );
+                    throw new IllegalStateException( "No confirm or error string in response." );
                 }
                 else {
-                    System.out.println( "There was an unknown error sent back from the server." );
+                    throw new IllegalStateException( "There was an unknown error sent back from the server." );
                 }
             }
             else {
-                System.out.println( "Error string received." );
+                throw new IllegalStateException( "Error string received." );
             }
         }
         else {
             String s5 = response.getProperty( "Signature" );
             if ( s5 == null ) {
-                System.out.println( "Signature from server is invalid." );
+                throw new IllegalStateException( "Signature from server is invalid." );
             }
             return B.b( s5.getBytes() );
         }
-        return null;
     }
 
     public void write() {
@@ -152,8 +153,7 @@ public class Signer implements org.hardisonbrewing.narst.Signer {
             int j1 = randomaccessfile.readUnsignedShort();
             j1 = ( j1 & 0xff ) << 8 | j1 >>> 8;
             if ( j1 < 74 ) {
-                System.out.println( "Version number incompatible." );
-                System.exit( -1 );
+                throw new IllegalStateException( "Version number incompatible." );
             }
             int k1 = randomaccessfile.readUnsignedShort();
             k1 = ( k1 & 0xff ) << 8 | k1 >>> 8;
@@ -162,8 +162,7 @@ public class Signer implements org.hardisonbrewing.narst.Signer {
             randomaccessfile.skipBytes( 2 );
             randomaccessfile.skipBytes( k1 + i2 );
             if ( (long) i2 + SERVER_RESPONSE_SIZE + SIGNATURE_HEADER_SIZE > 64988L ) {
-                System.out.println( "Appending a signature to the following file will cause it to be larger than the maximum sibling cod file size. Signing will abort." );
-                System.exit( -1 );
+                throw new IllegalStateException( "Appending a signature to the following file will cause it to be larger than the maximum sibling cod file size. Signing will abort." );
             }
             do {
                 int j2 = randomaccessfile.readUnsignedByte();
@@ -251,8 +250,7 @@ public class Signer implements org.hardisonbrewing.narst.Signer {
             int versionNumber = vn2 << 8 | vn1;
 
             if ( versionNumber < 74 ) {
-                System.out.println( "Version number incompatible" );
-                System.exit( -1 );
+                throw new IllegalStateException( "Version number incompatible" );
             }
 
             int cs1 = datainputstream.readUnsignedByte();
@@ -321,9 +319,7 @@ public class Signer implements org.hardisonbrewing.narst.Signer {
         }
         catch (Exception e) {
             e.printStackTrace();
-            System.out.println( "Unable to locate algorithm" );
-            System.exit( -1 );
-            return null;
+            throw new IllegalStateException( "Unable to locate algorithm" );
         }
     }
 
